@@ -1,18 +1,34 @@
 using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
 using MvcZapatillasExamen.Data;
+using MvcZapatillasExamen.Helpers;
 using MvcZapatillasExamen.Repositories;
 using MvcZapatillasExamen.Services;
+using System.Text.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-string connectionString = builder.Configuration.GetConnectionString("MySqlDb");
-builder.Services.AddDbContext<ZapatillasContext>(options => options.UseMySQL(connectionString));
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddAWSService<IAmazonS3>();
 builder.Services.AddTransient<ServiceStorageS3>();
+
+string secretName = builder.Configuration.GetValue<string>("Secretos:MySqlSecretName");
+string region = builder.Configuration.GetValue<string>("AWS:Region");
+
+string secretJson = HelperSecretManager.GetSecret(secretName, region);
+
+string connectionString = "";
+using (JsonDocument doc = JsonDocument.Parse(secretJson))
+{
+    connectionString = doc.RootElement.GetProperty("MySqlDb").GetString();
+}
+
+builder.Services.AddDbContext<ZapatillasContext>(options =>
+    options.UseMySQL(connectionString));
+
+
 builder.Services.AddScoped<RepositoryZapatillas>();
 builder.Services.AddScoped<ZapatillasService>(); 
 
