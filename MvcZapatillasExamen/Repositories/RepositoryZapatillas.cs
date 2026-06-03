@@ -20,9 +20,13 @@ namespace MvcZapatillasExamen.Repositories
 
         public async Task InsertarZapatillaAsync(int id, string nombre, string descripcion, string imagen)
         {
+            int maxId = this.context.Zapatillas.Any()
+                ? await this.context.Zapatillas.MaxAsync(z => z.IdZapatilla) + 1
+                : 1; // 
+
             Zapatilla zapatilla = new Zapatilla
             {
-                IdZapatilla = id,
+                IdZapatilla = maxId,
                 Nombre = nombre,
                 Descripcion = descripcion,
                 ImagenUrl = imagen
